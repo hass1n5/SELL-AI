@@ -1,0 +1,2 @@
+import {ProductInput} from '../lib/types';
+export const demoProduct:ProductInput={name:'Portable Mini Projector',sellingPrice:6999,productCost:3100,shipping:250,packaging:120,platformFee:280,paymentFee:140,adCost:900,returnCost:180,demandNow:76,demandPrevious:54,competitionNow:63,adsNow:71,reviewCount:86,reviewRating:4.4,trustSignals:78,problemClarity:88,visualAppeal:92};
