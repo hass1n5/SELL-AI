@@ -13,3 +13,11 @@ export interface AnalysisResult{
  decision:{label:'test'|'research-first'|'refresh-research';rationale:string[]};
  evidence:EvidenceItem[];
 }
+
+export interface AnalysisRecord{
+ id:string;
+ createdAt:string;
+ productName:string;
+ input:ProductInput;
+ result:AnalysisResult;
+}

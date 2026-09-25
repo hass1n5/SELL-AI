@@ -13,6 +13,11 @@ Evidence-first product intelligence foundation.
 - "Should I Sell This?" action state
 - API: `POST /api/analyze`
 
+### Day 2 progress
+- Saves the latest eight completed analyses in browser storage
+- Restores prior inputs and evidence-backed results from the workspace
+- Surfaces API and analysis errors without losing the current form
+
 ### Principles
 - Gemini is an analyst, not the source of truth.
 - External numbers are never fabricated.
