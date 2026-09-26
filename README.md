@@ -127,10 +127,10 @@ The demo works without credentials. Apify research requires deployment secrets l
 - `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_REFRESH_TOKEN` — server-only OAuth credentials
 - `GOOGLE_ADS_CUSTOMER_ID` — accessible customer account, default `1629155768`
 - `GOOGLE_CLOUD_PROJECT_ID` — Google Cloud project identifier
-- `GOOGLE_ADS_DEVELOPER_TOKEN` — required by Google Ads API access level; never rendered or logged
+- `GOOGLE_ADS_DEVELOPER_TOKEN` — optional compatibility header for older access levels; never rendered or logged. Current v25 access is governed by the Google Cloud project attached to the OAuth client.
 - `GOOGLE_ADS_LOGIN_CUSTOMER_ID`, `GOOGLE_ADS_TIMEOUT_MS`, `GOOGLE_ADS_MAX_RETRIES` — optional manager account and bounded request controls
 
-Provider secrets are never returned by an API, rendered in the UI, logged, or committed. Google Ads needs an approved developer token and Keyword Planner permission; an OAuth token alone does not guarantee access. Missing or restricted access keeps the demo functional and reports `NOT CONNECTED`, `AUTH ERROR`, or `UNAVAILABLE` without fabricated metrics. Apify health is available at `/api/providers/apify/health`; Gemini health is available at `/api/ai/status`.
+Provider secrets are never returned by an API, rendered in the UI, logged, or committed. Google Ads needs the `adwords` OAuth scope, an accessible customer account, and Google Cloud project/API access; an OAuth token alone does not guarantee Keyword Planner permission. Missing or restricted access keeps the demo functional and reports `NOT CONNECTED`, `AUTH ERROR`, or `UNAVAILABLE` without fabricated metrics. Apify health is available at `/api/providers/apify/health`; Gemini health is available at `/api/ai/status`.
 
 ## Checks
 
