@@ -26,6 +26,15 @@ SELL-AI is an evidence-first product intelligence workspace. It turns user input
 - Analyst interface that accepts verified evidence without inventing source data
 - Local browser history for the latest eight analyses
 
+## Day 3 Gemini analyst
+
+- Provider abstraction under `lib/ai/gemini`
+- Structured report and analyst chat routes
+- Gemini receives Product DNA, intelligence, verification results, research gaps, and evidence IDs
+- Every model claim is normalized against supplied evidence IDs; unsupported claims become `UNKNOWN` or `INSUFFICIENT EVIDENCE`
+- Gemini status, usage foundation, model, last analysis time, evidence analyzed, and excluded evidence are shown without exposing secrets
+- The application keeps working when the key is absent and shows `Gemini Not Connected`
+
 ## Architecture
 
 ```text
@@ -64,6 +73,10 @@ The current UI uses transparent user inputs and clearly labeled `DEMO / SIMULATE
 - `POST /api/research` — create a queued request or execute the configured Apify job with `execute: true`
 - `GET /api/research` and `GET /api/research/:id` — inspect in-memory research job status
 - `GET /api/providers/apify/health` — verify server-side Apify authentication and provider health
+- `POST /api/ai/analyze` — generate an evidence-bound Gemini analysis
+- `POST /api/ai/report` — generate the structured AI report
+- `POST /api/ai/chat` — ask an evidence-bound analyst question
+- `GET /api/ai/status` — report Gemini connectivity and usage status
 - `GET /api/product/demo` — return the demo Product DNA and Opportunity Radar
 
 ## Run
@@ -82,8 +95,11 @@ The demo works without credentials. Apify research requires deployment secrets l
 - `APIFY_API_TOKEN` — project secret, read only on the server
 - `APIFY_ACTOR_ID` — the configured Apify Actor or Task-compatible Actor ID
 - `APIFY_TIMEOUT_MS`, `APIFY_MAX_RETRIES`, `APIFY_POLL_INTERVAL_MS`, `APIFY_MAX_POLLS` — bounded job controls
+- `GEMINI_API_KEY` — server-only Gemini project secret
+- `GEMINI_MODEL`, `GEMINI_TIMEOUT_MS`, `GEMINI_MAX_RETRIES` — model and bounded request controls
+- Optional `GEMINI_INPUT_COST_PER_MILLION` and `GEMINI_OUTPUT_COST_PER_MILLION` enable cost estimates only when reliable pricing is supplied
 
-The token is never returned by an API, rendered in the UI, logged, or committed. Provider health is available at `/api/providers/apify/health`.
+Provider secrets are never returned by an API, rendered in the UI, logged, or committed. Apify health is available at `/api/providers/apify/health`; Gemini health is available at `/api/ai/status`.
 
 ## Checks
 

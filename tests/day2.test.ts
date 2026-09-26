@@ -6,6 +6,8 @@ import {createEvidence,calculateFreshness,verifyEvidence} from '../lib/evidence'
 import {buildOpportunityRadar} from '../lib/intelligence/opportunity';
 import {calculateTrend} from '../lib/intelligence/trend';
 import {ApifyProviderAdapter} from '../lib/sources/apify';
+import {GeminiClient} from '../lib/ai/gemini/client';
+import {buildAnalystInput,detectResearchGaps,generateGeminiReport} from '../lib/ai/gemini/analyst';
 
 const evidence=(id:string,value:string,sourceId='source-a')=>createEvidence({id,claim:'Demand signal',source:'Test source',sourceType:'search',sourceUrl:'https://example.test/source',sourceId,region:'PK',originalValue:value,normalizedValue:value,status:'unverified',confidence:.5},new Date('2026-01-01T00:00:00.000Z'));
 
@@ -74,4 +76,38 @@ test('Apify adapter verifies auth, retries transient responses, and ingests data
 test('Apify health reports unconfigured without a secret',async()=>{
  const adapter=new ApifyProviderAdapter({actorId:'actor',baseUrl:'https://api.example.test/v2',timeoutMs:1000,maxRetries:0,pollIntervalMs:1,maxPolls:1});
  const health=await adapter.verifyAuthentication(); assert.equal(health.status,'unconfigured'); assert.equal(health.actorConfigured,true);
+});
+
+const geminiConfig={apiKey:'test-key',model:'gemini-test',baseUrl:'https://generativelanguage.googleapis.com',timeoutMs:1000,maxRetries:0};
+const reportPayload=(evidenceId:string,claim='Demand is increasing')=>{const c={claim,status:'VERIFIED',evidenceIds:[evidenceId]};const section={summary:c,claims:[]};return{executiveSummary:c,demandInterpretation:section,trendInterpretation:section,buyerIntentInterpretation:section,competitionInterpretation:section,pricingInterpretation:section,profitInterpretation:section,riskInterpretation:section,evidenceGaps:[],researchRecommendations:[],testPlan:[{step:'Run a controlled test',successMetric:'Use supplied metrics',guardrail:'Stop if margin falls',evidenceIds:[evidenceId]}],shouldISell:{supportingEvidence:[c],concerns:[],missingEvidence:[],assumptions:[],controlledTestRecommendation:{claim,status:'INFERRED',evidenceIds:[evidenceId]}}};};
+
+test('Gemini reports NOT CONNECTED when the API key is missing',async()=>{
+ const client=new GeminiClient({model:'gemini-test',baseUrl:'https://api.example.test',timeoutMs:1000,maxRetries:0});
+ assert.equal((await client.verifyAuthentication()).status,'NOT CONNECTED');
+ await assert.rejects(()=>generateGeminiReport(buildAnalystInput(demoProduct,analyzeProduct(demoProduct)),client),error=>{assert.equal((error as Error & {code?:string}).code,'missing_key');return true;});
+});
+
+test('Gemini status handles unavailable API without exposing secrets',async()=>{
+ const originalFetch=globalThis.fetch;globalThis.fetch=(async()=>new Response('unavailable',{status:503})) as typeof fetch;
+ try{const health=await new GeminiClient(geminiConfig).verifyAuthentication();assert.equal(health.status,'NOT CONNECTED');assert.equal(health.message.includes('test-key'),false);}finally{globalThis.fetch=originalFetch;}
+});
+
+test('valid Gemini JSON is normalized with evidence IDs',async()=>{
+ const originalFetch=globalThis.fetch;const result=analyzeProduct(demoProduct);const evidenceId=result.evidence[0].id;globalThis.fetch=(async()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(reportPayload(evidenceId))}]}}],usageMetadata:{promptTokenCount:20,candidatesTokenCount:10}}),{status:200})) as typeof fetch;
+ try{const report=await generateGeminiReport(buildAnalystInput(demoProduct,result),new GeminiClient(geminiConfig));assert.equal(report.executiveSummary.claim,'Demand is increasing');assert.deepEqual(report.executiveSummary.evidenceIds,[evidenceId]);assert.equal(report.metadata.evidenceAnalyzed,3);}finally{globalThis.fetch=originalFetch;}
+});
+
+test('malformed Gemini JSON is rejected',async()=>{
+ const originalFetch=globalThis.fetch;globalThis.fetch=(async()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:'not json'}]}}]}),{status:200})) as typeof fetch;
+ try{await assert.rejects(()=>generateGeminiReport(buildAnalystInput(demoProduct,analyzeProduct(demoProduct)),new GeminiClient(geminiConfig)),error=>{assert.equal((error as Error & {code?:string}).code,'malformed_json');return true;});}finally{globalThis.fetch=originalFetch;}
+});
+
+test('unsupported claims lose invalid evidence IDs and become insufficient evidence',async()=>{
+ const originalFetch=globalThis.fetch;const result=analyzeProduct(demoProduct);globalThis.fetch=(async()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(reportPayload('invented-id','Invented market fact'))}]}}]}),{status:200})) as typeof fetch;
+ try{const report=await generateGeminiReport(buildAnalystInput(demoProduct,result),new GeminiClient(geminiConfig));assert.equal(report.executiveSummary.status,'INSUFFICIENT EVIDENCE');assert.deepEqual(report.executiveSummary.evidenceIds,[]);}finally{globalThis.fetch=originalFetch;}
+});
+
+test('research gaps identify missing external demand and stale or conflicting evidence',()=>{
+ const result=analyzeProduct(demoProduct);const gaps=detectResearchGaps(demoProduct,result);assert.equal(gaps.some(gap=>gap.missingField==='local demand'),true);assert.equal(gaps.some(gap=>gap.missingField==='competitor pricing'),true);
+ const stale={...result.evidence[0],freshness:'stale' as const,verificationStatus:'stale' as const,status:'stale' as const};const conflicted={...result.evidence[1],claim:'Demand and competition signals are user-supplied demo inputs',normalizedValue:'different',verificationStatus:'conflict' as const,status:'conflict' as const};const conflictResult={...result,evidence:[stale,result.evidence[1],conflicted]};const conflictGaps=detectResearchGaps(demoProduct,conflictResult,conflictResult.evidence);assert.equal(conflictGaps.some(gap=>gap.missingField==='stale sources'),true);assert.equal(conflictGaps.some(gap=>gap.missingField==='conflicting values'),true);
 });
