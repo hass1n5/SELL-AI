@@ -5,3 +5,5 @@ export * from './product-dna';
 export * from './research';
 export * from './research-jobs';
 export * from './trend';
+export * from './seo';
+export * from './seo-store';

@@ -1,15 +1,18 @@
 import {ResearchProviderCost,ResearchRequest,SourceType} from '../types';
 import {getApifyConfig} from '../sources/apify';
 import {getSerpApiConfig} from '../sources/serpapi';
+import {getGoogleAdsConfig} from '../sources/google-ads';
 export function getResearchProviders():ResearchProviderCost[]{
  const apify=getApifyConfig();
  const serpapi=getSerpApiConfig();
+ const googleAds=getGoogleAdsConfig();
  return[
   {sourceName:'Public web search',sourceType:'search',estimatedCost:0,priority:'FREE/PUBLIC',availability:'not-connected',enabled:false},
   {sourceName:'Marketplace API',sourceType:'marketplace',estimatedCost:0,priority:'LOW-COST',availability:'credential-required',enabled:false},
   {sourceName:'Social listening provider',sourceType:'social',estimatedCost:0,priority:'PAID',availability:'credential-required',enabled:false},
   {sourceName:'Apify actors',sourceType:'marketplace',estimatedCost:0,priority:'APIFY / EXPENSIVE',availability:apify.token&&apify.actorId?'available':'credential-required',enabled:Boolean(apify.token&&apify.actorId)},
   {sourceName:'SerpApi search',sourceType:'search',estimatedCost:null,priority:'PAID',availability:serpapi.apiKey?'available':'credential-required',enabled:Boolean(serpapi.apiKey)},
+  {sourceName:'Google Ads Keyword Planner',sourceType:'ads',estimatedCost:null,priority:'PAID',availability:googleAds.clientId&&googleAds.clientSecret&&googleAds.refreshToken?'available':'credential-required',enabled:Boolean(googleAds.clientId&&googleAds.clientSecret&&googleAds.refreshToken)},
  ];
 }
 export const researchProviders:ResearchProviderCost[]=getResearchProviders();

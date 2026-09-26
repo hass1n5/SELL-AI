@@ -44,6 +44,15 @@ SELL-AI is an evidence-first product intelligence workspace. It turns user input
 - Gemini status, usage foundation, model, last analysis time, evidence analyzed, and excluded evidence are shown without exposing secrets
 - The application keeps working when the key is absent and shows `Gemini Not Connected`
 
+## Google Ads SEO intelligence
+
+- Isolated OAuth Google Ads provider under `lib/sources/google-ads` with refresh-token exchange, bounded retries, timeout handling, and safe error states
+- Keyword Planner ideas are normalized into SEO keyword records and evidence records before verification; missing volume, competition, CPC, or historical metrics remain unavailable
+- Search intent is a transparent informational, commercial, transactional, navigational, or unknown classification based on the keyword text
+- Opportunity states show evidence quality, buyer/commercial intent, competition, rising historical values when returned, and insufficient evidence without a black-box score
+- Optional SerpApi evidence is combined through the existing Evidence Engine; conflicts remain visible and SERP presence is never treated as sales or demand proof
+- Product/service, region, and language are retained on every SEO research result
+
 ## Architecture
 
 ```text
@@ -84,6 +93,10 @@ The current UI uses transparent user inputs and clearly labeled `DEMO / SIMULATE
 - `GET /api/providers/apify/health` — verify server-side Apify authentication and provider health
 - `POST /api/research/run` — run a SerpApi Google or Google Shopping research request
 - `GET /api/providers/serpapi/health` — verify SerpApi authentication and usage health
+- `POST /api/google-ads/keyword-ideas` — request validated Google Ads Keyword Planner ideas
+- `GET /api/google-ads/status` — report Google Ads connection, latency, usage, and safe error status
+- `POST /api/seo/research` — combine Google Ads keyword evidence with optional SerpApi evidence and produce a transparent SEO report
+- `GET /api/seo/keywords` — return the latest in-memory SEO research result
 - `POST /api/ai/analyze` — generate an evidence-bound Gemini analysis
 - `POST /api/ai/report` — generate the structured AI report
 - `POST /api/ai/chat` — ask an evidence-bound analyst question
@@ -111,8 +124,13 @@ The demo works without credentials. Apify research requires deployment secrets l
 - `GEMINI_API_KEY` — server-only Gemini project secret
 - `GEMINI_MODEL`, `GEMINI_TIMEOUT_MS`, `GEMINI_MAX_RETRIES` — model and bounded request controls
 - Optional `GEMINI_INPUT_COST_PER_MILLION` and `GEMINI_OUTPUT_COST_PER_MILLION` enable cost estimates only when reliable pricing is supplied
+- `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_REFRESH_TOKEN` — server-only OAuth credentials
+- `GOOGLE_ADS_CUSTOMER_ID` — accessible customer account, default `1629155768`
+- `GOOGLE_CLOUD_PROJECT_ID` — Google Cloud project identifier
+- `GOOGLE_ADS_DEVELOPER_TOKEN` — required by Google Ads API access level; never rendered or logged
+- `GOOGLE_ADS_LOGIN_CUSTOMER_ID`, `GOOGLE_ADS_TIMEOUT_MS`, `GOOGLE_ADS_MAX_RETRIES` — optional manager account and bounded request controls
 
-Provider secrets are never returned by an API, rendered in the UI, logged, or committed. Apify health is available at `/api/providers/apify/health`; Gemini health is available at `/api/ai/status`.
+Provider secrets are never returned by an API, rendered in the UI, logged, or committed. Google Ads needs an approved developer token and Keyword Planner permission; an OAuth token alone does not guarantee access. Missing or restricted access keeps the demo functional and reports `NOT CONNECTED`, `AUTH ERROR`, or `UNAVAILABLE` without fabricated metrics. Apify health is available at `/api/providers/apify/health`; Gemini health is available at `/api/ai/status`.
 
 ## Checks
 
@@ -122,4 +140,4 @@ pnpm exec next build
 
 ## Future provider integrations
 
-Day 3 can connect public search, marketplace, social, pricing, and review adapters; persist evidence and Product DNA in a database; add authentication; and connect Gemini only as an analyst over verified `EvidenceItem[]`.
+The next recommended task is to persist SEO research, EvidenceItem records, usage history, and Product DNA in a database, then add Google Ads manager-account and location constant discovery after access is approved.

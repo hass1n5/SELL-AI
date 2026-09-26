@@ -50,7 +50,7 @@ export interface ResearchJob{
  id:string; provider:'apify'; query:string; region:string; actorId?:string; status:ResearchJobStatus;
  createdAt:string; startedAt?:string; completedAt?:string; evidenceCount:number; errorCode?:string; errorMessage?:string;
 }
-export interface ProviderHealth{provider:'apify'|'serpapi';status:'healthy'|'degraded'|'unconfigured'|'unhealthy'|'rate-limited';checkedAt:string;latencyMs?:number;actorConfigured?:boolean;message:string;requestCount?:number;lastSuccessfulResearch?:string|null;lastError?:string|null;}
+export interface ProviderHealth{provider:'apify'|'serpapi'|'google-ads';status:'healthy'|'degraded'|'unconfigured'|'unhealthy'|'rate-limited';checkedAt:string;latencyMs?:number;actorConfigured?:boolean;message:string;requestCount?:number;lastSuccessfulResearch?:string|null;lastError?:string|null;}
 export interface VerificationReport{verified:EvidenceItem[];duplicates:string[];stale:string[];conflicts:string[];missingClaims:string[];anomalies:string[];}
 
 export interface AnalysisResult{

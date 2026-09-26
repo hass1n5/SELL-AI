@@ -1,0 +1,15 @@
+import type {EvidenceItem,ProviderHealth,VerificationReport} from '../../types';
+
+export type GoogleAdsEngine='keyword_ideas';
+export interface GoogleAdsConfig{clientId?:string;clientSecret?:string;refreshToken?:string;customerId:string;cloudProjectId?:string;developerToken?:string;loginCustomerId?:string;baseUrl:string;oauthUrl:string;timeoutMs:number;maxRetries:number;}
+export interface GoogleAdsKeywordRequest{query?:string;seedKeywords?:string[];seedUrl?:string;customerId?:string;location?:string;language?:string;geoTargetConstants?:string[];languageConstant?:string;includeAdultKeywords?:boolean;network?:'GOOGLE_SEARCH'|'GOOGLE_SEARCH_AND_PARTNERS';}
+export interface GoogleAdsRawMetric{avgMonthlySearches?:number|string|null;competition?:string|null;competitionIndex?:number|string|null;lowTopOfPageBidMicros?:number|string|null;highTopOfPageBidMicros?:number|string|null;monthlySearchVolumes?:Array<Record<string,unknown>>;[key:string]:unknown;}
+export interface GoogleAdsRawIdea{text?:string;keywordIdeaMetrics?:GoogleAdsRawMetric;closeVariants?:string[];[key:string]:unknown;}
+export interface GoogleAdsRawResponse{results?:GoogleAdsRawIdea[];error?:{code?:number;message?:string;status?:string};[key:string]:unknown;}
+export type GoogleAdsErrorCode='missing_credentials'|'invalid_configuration'|'invalid_auth'|'permission_denied'|'rate_limited'|'quota_exhausted'|'timeout'|'unavailable'|'malformed_response'|'unsupported'|'empty_results';
+export class GoogleAdsProviderError extends Error{constructor(public readonly code:GoogleAdsErrorCode,message:string,public readonly status?:number){super(message);this.name='GoogleAdsProviderError';}}
+export interface SeoKeyword{keyword:string;intent:'informational'|'commercial'|'transactional'|'navigational'|'unknown';location:string;language:string;searchVolume:number|null;competition:string|null;competitionIndex:number|null;cpc:{low:number|null;high:number|null;currency:string}|null;historicalMetrics:Array<Record<string,unknown>>|null;source:string;sourceTimestamp:string;evidenceId:string;freshness:EvidenceItem['freshness'];verificationStatus:EvidenceItem['verificationStatus'];confidence:number;}
+export interface SeoOpportunity{keyword:string;states:string[];intent:SeoKeyword['intent'];relevance:'high'|'medium'|'low'|'unknown';evidenceIds:string[];reason:string;}
+export interface GoogleAdsKeywordResult{keywords:SeoKeyword[];opportunities:SeoOpportunity[];evidence:EvidenceItem[];verification:VerificationReport;query:string;location:string;language:string;sourceStatus:'success'|'empty';requestId:string;latencyMs:number;}
+export interface GoogleAdsUsageRecord{requestId:string;timestamp:string;query:string;location:string;success:boolean;latencyMs:number;keywordCount:number;errorCode?:GoogleAdsErrorCode;}
+export interface GoogleAdsHealth extends ProviderHealth{provider:'google-ads';status:'healthy'|'degraded'|'unconfigured'|'unhealthy'|'rate-limited';requestCount:number;lastSuccessfulResearch:string|null;lastError:string|null;customerId:string;}
