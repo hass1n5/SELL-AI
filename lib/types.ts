@@ -44,13 +44,13 @@ export interface OpportunitySignal{
 export interface OpportunityRadar{signals:OpportunitySignal[];mode:'transparent signals';}
 export interface DataStatus{sourcesConnected:string[];sourcesUnavailable:string[];lastResearchTime:string|null;evidenceCount:number;verifiedEvidenceCount:number;staleEvidenceCount:number;conflictingEvidenceCount:number;}
 export interface ResearchRequest{id:string;productQuery:string;missingEvidence:string[];requiredSource?:SourceType;region:string;priority:'FREE/PUBLIC'|'LOW-COST'|'PAID'|'APIFY / EXPENSIVE';estimatedCost:number;status:'queued'|'researching'|'completed'|'blocked'|'missing'|'failed';createdAt:string;}
-export interface ResearchProviderCost{sourceName:string;sourceType:SourceType;estimatedCost:number;priority:ResearchRequest['priority'];availability:'available'|'not-connected'|'credential-required';enabled:boolean;}
+export interface ResearchProviderCost{sourceName:string;sourceType:SourceType;estimatedCost:number|null;priority:ResearchRequest['priority'];availability:'available'|'not-connected'|'credential-required';enabled:boolean;}
 export type ResearchJobStatus='queued'|'running'|'completed'|'blocked'|'failed'|'timed-out';
 export interface ResearchJob{
  id:string; provider:'apify'; query:string; region:string; actorId?:string; status:ResearchJobStatus;
  createdAt:string; startedAt?:string; completedAt?:string; evidenceCount:number; errorCode?:string; errorMessage?:string;
 }
-export interface ProviderHealth{provider:'apify';status:'healthy'|'degraded'|'unconfigured'|'unhealthy';checkedAt:string;latencyMs?:number;actorConfigured:boolean;message:string;}
+export interface ProviderHealth{provider:'apify'|'serpapi';status:'healthy'|'degraded'|'unconfigured'|'unhealthy'|'rate-limited';checkedAt:string;latencyMs?:number;actorConfigured?:boolean;message:string;requestCount?:number;lastSuccessfulResearch?:string|null;lastError?:string|null;}
 export interface VerificationReport{verified:EvidenceItem[];duplicates:string[];stale:string[];conflicts:string[];missingClaims:string[];anomalies:string[];}
 
 export interface AnalysisResult{

@@ -26,6 +26,15 @@ SELL-AI is an evidence-first product intelligence workspace. It turns user input
 - Analyst interface that accepts verified evidence without inventing source data
 - Local browser history for the latest eight analyses
 
+## SerpApi search intelligence
+
+- Modular SerpApi client, adapter, normalizer, cache, and usage tracker under `lib/sources/serpapi`
+- Google Search and configured Google Shopping research with region/location support
+- Raw result metadata is normalized through the existing Evidence and Verification engines
+- Search presence, positions, recurring products/brands/categories, Shopping presence, and observed price ranges are indicators only; they are never labeled as sales or demand proof
+- Repeated query/region/engine requests reuse short-lived cached evidence and display its age
+- Missing credentials keep demo mode working and show `SERPAPI: NOT CONNECTED`
+
 ## Day 3 Gemini analyst
 
 - Provider abstraction under `lib/ai/gemini`
@@ -73,6 +82,8 @@ The current UI uses transparent user inputs and clearly labeled `DEMO / SIMULATE
 - `POST /api/research` — create a queued request or execute the configured Apify job with `execute: true`
 - `GET /api/research` and `GET /api/research/:id` — inspect in-memory research job status
 - `GET /api/providers/apify/health` — verify server-side Apify authentication and provider health
+- `POST /api/research/run` — run a SerpApi Google or Google Shopping research request
+- `GET /api/providers/serpapi/health` — verify SerpApi authentication and usage health
 - `POST /api/ai/analyze` — generate an evidence-bound Gemini analysis
 - `POST /api/ai/report` — generate the structured AI report
 - `POST /api/ai/chat` — ask an evidence-bound analyst question
@@ -95,6 +106,8 @@ The demo works without credentials. Apify research requires deployment secrets l
 - `APIFY_API_TOKEN` — project secret, read only on the server
 - `APIFY_ACTOR_ID` — the configured Apify Actor or Task-compatible Actor ID
 - `APIFY_TIMEOUT_MS`, `APIFY_MAX_RETRIES`, `APIFY_POLL_INTERVAL_MS`, `APIFY_MAX_POLLS` — bounded job controls
+- `SERPAPI_KEY` — server-only SerpApi project secret
+- `SERPAPI_TIMEOUT_MS`, `SERPAPI_MAX_RETRIES` — bounded search request controls
 - `GEMINI_API_KEY` — server-only Gemini project secret
 - `GEMINI_MODEL`, `GEMINI_TIMEOUT_MS`, `GEMINI_MAX_RETRIES` — model and bounded request controls
 - Optional `GEMINI_INPUT_COST_PER_MILLION` and `GEMINI_OUTPUT_COST_PER_MILLION` enable cost estimates only when reliable pricing is supplied
