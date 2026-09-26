@@ -61,7 +61,9 @@ The current UI uses transparent user inputs and clearly labeled `DEMO / SIMULATE
 - `POST /api/analyze` — calculate the transparent Day 1/Day 2 workspace result
 - `GET /api/evidence` — return the current demo evidence ledger and status
 - `POST /api/evidence/verify` — verify an evidence array for duplicates, stale records, conflicts, anomalies, and missing claims
-- `POST /api/research` — create a queued research request without calling a provider
+- `POST /api/research` — create a queued request or execute the configured Apify job with `execute: true`
+- `GET /api/research` and `GET /api/research/:id` — inspect in-memory research job status
+- `GET /api/providers/apify/health` — verify server-side Apify authentication and provider health
 - `GET /api/product/demo` — return the demo Product DNA and Opportunity Radar
 
 ## Run
@@ -75,7 +77,13 @@ Open `http://localhost:3000`.
 
 ## Environment variables
 
-No environment variables are required for the demo foundation. Future provider integrations should add credentials through deployment secrets and implement a `SourceAdapter` under `lib/sources`.
+The demo works without credentials. Apify research requires deployment secrets listed in `.env.example`:
+
+- `APIFY_API_TOKEN` — project secret, read only on the server
+- `APIFY_ACTOR_ID` — the configured Apify Actor or Task-compatible Actor ID
+- `APIFY_TIMEOUT_MS`, `APIFY_MAX_RETRIES`, `APIFY_POLL_INTERVAL_MS`, `APIFY_MAX_POLLS` — bounded job controls
+
+The token is never returned by an API, rendered in the UI, logged, or committed. Provider health is available at `/api/providers/apify/health`.
 
 ## Checks
 

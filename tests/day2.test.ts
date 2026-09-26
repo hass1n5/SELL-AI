@@ -5,6 +5,7 @@ import {analyzeProduct} from '../lib/analyzer';
 import {createEvidence,calculateFreshness,verifyEvidence} from '../lib/evidence';
 import {buildOpportunityRadar} from '../lib/intelligence/opportunity';
 import {calculateTrend} from '../lib/intelligence/trend';
+import {ApifyProviderAdapter} from '../lib/sources/apify';
 
 const evidence=(id:string,value:string,sourceId='source-a')=>createEvidence({id,claim:'Demand signal',source:'Test source',sourceType:'search',sourceUrl:'https://example.test/source',sourceId,region:'PK',originalValue:value,normalizedValue:value,status:'unverified',confidence:.5},new Date('2026-01-01T00:00:00.000Z'));
 
@@ -47,4 +48,30 @@ test('opportunity radar returns transparent signal states with evidence referenc
  assert.equal(radar.mode,'transparent signals');
  assert.equal(radar.signals.length,7);
  assert.equal(radar.signals.every(signal=>Array.isArray(signal.evidenceIds)),true);
+});
+
+test('Apify adapter verifies auth, retries transient responses, and ingests dataset evidence',async()=>{
+ const originalFetch=globalThis.fetch; let calls=0;
+ globalThis.fetch=(async(input,init)=>{
+  calls+=1; const url=String(input); const headers=new Headers(init?.headers);
+  assert.equal(headers.get('Authorization'),'Bearer test-token');
+  if(url.endsWith('/users/me')&&calls===1)return new Response('temporary', {status:503});
+  if(url.endsWith('/users/me'))return new Response(JSON.stringify({data:{id:'user'}}),{status:200});
+  if(url.includes('/actors/actor/runs'))return new Response(JSON.stringify({data:{id:'run-1',status:'RUNNING',defaultDatasetId:'dataset-1'}}),{status:201});
+  if(url.includes('/actor-runs/run-1'))return new Response(JSON.stringify({data:{id:'run-1',status:'SUCCEEDED',defaultDatasetId:'dataset-1'}}),{status:200});
+  if(url.includes('/datasets/dataset-1/items'))return new Response(JSON.stringify([{title:'unverified result'}]),{status:200});
+  return new Response('not found',{status:404});
+ }) as typeof fetch;
+ try{
+  const adapter=new ApifyProviderAdapter({token:'test-token',actorId:'actor',baseUrl:'https://api.example.test/v2',timeoutMs:1000,maxRetries:1,pollIntervalMs:1,maxPolls:2});
+  const health=await adapter.verifyAuthentication(); assert.equal(health.status,'healthy');
+  const job={id:'job-1',provider:'apify' as const,query:'test product',region:'PK',actorId:'actor',status:'running' as const,createdAt:new Date().toISOString(),evidenceCount:0};
+  const result=await adapter.runResearch({query:'test product',region:'PK',job});
+  assert.equal(result.job.status,'completed'); assert.equal(result.evidence.length,1); assert.equal(result.evidence[0].sourceType,'search'); assert.equal(result.evidence[0].verificationStatus,'unverified'); assert.equal(calls>=5,true);
+ }finally{globalThis.fetch=originalFetch;}
+});
+
+test('Apify health reports unconfigured without a secret',async()=>{
+ const adapter=new ApifyProviderAdapter({actorId:'actor',baseUrl:'https://api.example.test/v2',timeoutMs:1000,maxRetries:0,pollIntervalMs:1,maxPolls:1});
+ const health=await adapter.verifyAuthentication(); assert.equal(health.status,'unconfigured'); assert.equal(health.actorConfigured,true);
 });
