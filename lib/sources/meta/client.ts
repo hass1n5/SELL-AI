@@ -35,6 +35,7 @@ function errorFromStatus(status:number,message?:string){
   if(status===401)return new ProviderError('invalid_auth','Meta access token was rejected.',status);
   if(status===403)return new ProviderError('permission_denied','Meta permission was denied for this capability.',status);
   if(status===429)return new ProviderError('rate_limited','Meta API rate limit reached.',status);
+  if(/missing permission|permission denied|unsupported get request|requires .* permission|app review/i.test(text))return new ProviderError('permission_denied','Meta permission or app review access was denied for this capability.',status);
   if(status===400)return new ProviderError('unavailable',safeMessage(text),status);
   return new ProviderError('unavailable',safeMessage(text),status);
 }
