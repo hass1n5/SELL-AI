@@ -44,6 +44,27 @@ SELL-AI is an evidence-first product intelligence workspace. It turns user input
 - Gemini status, usage foundation, model, last analysis time, evidence analyzed, and excluded evidence are shown without exposing secrets
 - The application keeps working when the key is absent and shows `Gemini Not Connected`
 
+## Meta / Facebook / Instagram intelligence
+
+- Read-only Meta Graph, Pages, Instagram Professional, Marketing API, catalog, and Ad Library adapters live under `lib/sources/meta`
+- `GET /api/meta/status` verifies the token and reports separate Facebook, Instagram, Ads, Catalog, and Ad Library capability states without returning secrets
+- `GET /api/meta/me`, `/api/meta/pages`, `/api/meta/ad-accounts`, `/api/meta/instagram`, and `/api/meta/catalogs` expose safe discovery endpoints
+- `POST /api/meta/research` runs Pages, Instagram, Ads, Catalog, or Ad Library research through the evidence and verification engines
+- `POST /api/meta/ads/research` and `POST /api/meta/catalog/research` provide focused read-only research routes
+- Ad metrics are emitted only when Meta returns them; spend, impressions, clicks, CPC, conversions, ROAS, and sales are never invented
+- Catalog tooling is read-only. Products are never published, changed, or deleted automatically
+- Meta evidence keeps source references, collection time, region, freshness, confidence, and verification status; conflicts remain visible
+- Ad Library output is research evidence and is subject to Meta permission and regional availability limits
+
+### Meta environment variables
+
+- `META_ACCESS_TOKEN` — server-only Meta token used for Graph API requests
+- `META_APP_ID`, `META_APP_SECRET` — optional app credentials for future token exchange and diagnostics; never rendered or logged
+- `META_BUSINESS_ID`, `META_AD_ACCOUNT_ID`, `META_PAGE_ID`, `META_INSTAGRAM_ACCOUNT_ID` — optional asset hints that narrow read-only discovery
+- `META_GRAPH_BASE_URL`, `META_GRAPH_API_VERSION`, `META_TIMEOUT_MS`, `META_MAX_RETRIES` — server-side endpoint and bounded request controls
+
+Meta permissions vary by app review and account type. Missing, expired, or restricted access is shown as `NOT CONNECTED`, `AUTH ERROR`, `PERMISSION ERROR`, `RATE LIMITED`, or `UNAVAILABLE`; the demo workspace remains usable and never mixes simulated values with Meta evidence. Use the smallest permissions needed for the selected capability and rotate exposed tokens immediately.
+
 ## Google Ads SEO intelligence
 
 - Isolated OAuth Google Ads provider under `lib/sources/google-ads` with refresh-token exchange, bounded retries, timeout handling, and safe error states
@@ -102,6 +123,15 @@ The current UI uses transparent user inputs and clearly labeled `DEMO / SIMULATE
 - `POST /api/ai/chat` — ask an evidence-bound analyst question
 - `GET /api/ai/status` — report Gemini connectivity and usage status
 - `GET /api/product/demo` — return the demo Product DNA and Opportunity Radar
+- `GET /api/meta/status` — report Meta authentication and capability health
+- `GET /api/meta/me` — return the authenticated Meta user identity
+- `GET /api/meta/pages` — discover accessible Facebook Pages
+- `GET /api/meta/ad-accounts` — discover accessible Meta ad accounts
+- `GET /api/meta/instagram` — discover a connected Instagram Professional account
+- `GET /api/meta/catalogs` — discover accessible product catalogs
+- `POST /api/meta/research` — run capability-specific Meta research and return evidence
+- `POST /api/meta/ads/research` — run read-only ad account, campaign, ad, and insights research
+- `POST /api/meta/catalog/research` — run read-only catalog, product set, and product research
 
 ## Run
 

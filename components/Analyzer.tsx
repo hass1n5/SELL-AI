@@ -7,6 +7,7 @@ import type {AnalysisRecord,AnalysisResult,ProductInput,ProviderHealth} from '..
 import type {GeminiChatResponse,GeminiReport,GeminiStatus} from '../lib/ai/gemini/types';
 import type {SerpApiHealth,SerpApiResearchResult} from '../lib/sources/serpapi/types';
 import SeoResearchPanel from './SeoResearchPanel';
+import MetaIntelligencePanel from './MetaIntelligencePanel';
 
 const HISTORY_KEY='sell-ai:analysis-history';
 const MAX_HISTORY=8;
@@ -59,6 +60,7 @@ export default function Analyzer(){
    <p className="micro">DEMO / SIMULATED signals are clearly marked. External sources are never fabricated.</p>
    <SearchResearchPanel health={serpApiHealth} query={researchQuery} setQuery={setResearchQuery} region={researchRegion} setRegion={setResearchRegion} result={researchResult} loading={researchLoading} error={researchError} onResearch={runResearch}/>
    <SeoResearchPanel/>
+   <MetaIntelligencePanel/>
    <div className="history"><div className="section-head compact"><div><span className="eyebrow">WORKSPACE MEMORY</span><h3>Saved analyses</h3></div>{history.length>0&&<button className="text-button" type="button" onClick={clearHistory}>Clear</button>}</div>{history.length===0?<p className="micro">Your completed analyses will appear here.</p>:<div className="history-list">{history.map(item=><button type="button" key={item.id} className={`history-item ${item.id===activeHistoryId?'active':''}`} onClick={()=>restore(item)}><span><strong>{item.productName}</strong><small>{new Date(item.createdAt).toLocaleString()}</small></span><b className={`history-decision ${item.result.decision.label}`}>{item.result.decision.label.replace('-',' ')}</b></button>)}</div>}</div>
   </section>
   <section className="panel results-panel">
